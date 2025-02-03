@@ -1,3 +1,17 @@
+Please follow the instructions at https://github.com/3dem/relion for compilation and installation.
+
+## How to use composite masks
+
+![Composite masks](images/relion5_composite_masks.png?raw=true)
+
+For membrane proteins, use a soft mask encompassing the whole particle, including both the protein(s) and the detergent/lipid micelle, as the reference mask and a soft mask generated from segmented protein densities as the mask of protein of interest. Set the composite low-pass filter to the desired resolution, such as 20 Å. During 3D classification or 3D auto-refinement, the micelle region (the difference between the reference mask and the mask of protein of interest) is low-pass filtered.
+
+If the mask of protein of interest is omitted or the composite low-pass filter is set to a negative number, the composte mask function is disabled.
+
+
+
+
+
 RELION 5.0.0
 ============
 
