@@ -3644,6 +3644,26 @@ Thereby, for example, the higher density inside the virion may be set to a const
 Note that this second mask should have one-values inside the virion and zero-values in the capsid and the solvent areas. \
 To use a second mask, use the additional option --solvent_mask2, which may given in the Additional arguments line (in the Running tab).");
 
+	joboptions["fn_protein_mask"] = JobOption("Mask of protein of interest (optional):", LABEL_MASK_CPIPE, 1, "", "Image Files (*.{spi,vol,msk,mrc})", "\
+Tight (soft) mask of the protein of interest.\n\
+\n\
+When this protein mask and the composite low-pass filter are provided, the voxels outside the protein mask and within the reference mask will be low-pass filtered. \
+This is the composite masking method used in:\n\
+\n\
+Dou, T., Lian, T., Shu, S. et al. The substrate and inhibitor binding mechanism of polyspecific transporter OAT1 revealed by high-resolution cryo-EM. Nat Struct Mol Biol 30, 1794–1805 (2023). https://doi.org/10.1038/s41594-023-01123-3.\n\
+\n\
+and\n\
+\n\
+Jiang, Y., Jiang, J. The Bor1 elevator transport cycle is subject to autoinhibition and activation. Nat Commun 15, 9090 (2024). https://doi.org/10.1038/s41467-024-53411-1\n\
+\n\
+To use composite masks for membrane proteins, provide a regular reference mask, that covers the entire structure of both the protein(s) and the detergent micelle, \
+and a soft mask of protein of interest excluding the detergent micelle, and set a low-pass filter resolution.\n\
+");
+	joboptions["low_pass_composite"] = JobOption("Composite low-pass filter (A) (optional):", -1, 1, 50, 1, "\
+Used together with the mask of protein of interest for composite masking. \
+Usually, 20 A is good to eliminate over-fitting of the detergent/lipid micelles of membrane proteins.\
+");
+
 	joboptions["ref_correct_greyscale"] = JobOption("Ref. map is on absolute greyscale?", false, "Probabilities are calculated based on a Gaussian noise model, \
 which contains a squared difference term between the reference and the experimental image. This has a consequence that the \
 reference needs to be on the same absolute intensity grey-scale as the experimental images. \
@@ -3976,7 +3996,20 @@ bool RelionJob::getCommandsClass3DJob(std::string &outputname, std::vector<std::
 
 	if (joboptions["fn_mask"].getString().length() > 0)
 	{
-		command += " --solvent_mask " + joboptions["fn_mask"].getString();
+		if (joboptions["fn_protein_mask"].getString().length() > 0 && joboptions["low_pass_composite"].getNumber(error_message) > 0)
+		{
+			// use the protein mask as the solvent mask.
+			command += " --solvent_mask " + joboptions["fn_protein_mask"].getString();
+			command += " --lowpass_mask_composite " + joboptions["fn_mask"].getString();
+			command += " --lowpass " + joboptions["low_pass_composite"].getString();
+			Node node(joboptions["fn_protein_mask"].getString(), joboptions["fn_protein_mask"].node_type);
+			inputNodes.push_back(node);
+		}
+		else
+		{
+			command += " --solvent_mask " + joboptions["fn_mask"].getString();
+		}
+
 		Node node(joboptions["fn_mask"].getString(), joboptions["fn_mask"].node_type);
 		inputNodes.push_back(node);
 	}
@@ -4157,6 +4190,26 @@ the corresponding pixels in the reconstructed map are set to the average value o
 Thereby, for example, the higher density inside the virion may be set to a constant. \
 Note that this second mask should have one-values inside the virion and zero-values in the capsid and the solvent areas. \
 To use a second mask, use the additional option --solvent_mask2, which may given in the Additional arguments line (in the Running tab).");
+
+	joboptions["fn_protein_mask"] = JobOption("Mask of protein of interest (optional):", LABEL_MASK_CPIPE, 1, "", "Image Files (*.{spi,vol,msk,mrc})", "\
+Tight (soft) mask of the protein of interest.\n\
+\n\
+When this protein mask and the composite low-pass filter are provided, the voxels outside the protein mask and within the reference mask will be low-pass filtered. \
+This is the composite masking method used in:\n\
+\n\
+Dou, T., Lian, T., Shu, S. et al. The substrate and inhibitor binding mechanism of polyspecific transporter OAT1 revealed by high-resolution cryo-EM. Nat Struct Mol Biol 30, 1794–1805 (2023). https://doi.org/10.1038/s41594-023-01123-3.\n\
+\n\
+and\n\
+\n\
+Jiang, Y., Jiang, J. The Bor1 elevator transport cycle is subject to autoinhibition and activation. Nat Commun 15, 9090 (2024). https://doi.org/10.1038/s41467-024-53411-1\n\
+\n\
+To use composite masks for membrane proteins, provide a regular reference mask, that covers the entire structure of both the protein(s) and the detergent micelle, \
+and a soft mask of protein of interest excluding the detergent micelle, and set a low-pass filter resolution.\n\
+");
+	joboptions["low_pass_composite"] = JobOption("Composite low-pass filter (A) (optional):", -1, 1, 50, 1, "\
+Used together with the mask of protein of interest for composite masking. \
+Usually, 20 A is good to eliminate over-fitting of the detergent/lipid micelles of membrane proteins.\
+");
 
 	joboptions["ref_correct_greyscale"] = JobOption("Ref. map is on absolute greyscale?", false, "Probabilities are calculated based on a Gaussian noise model, \
 which contains a squared difference term between the reference and the experimental image. This has a consequence that the \
@@ -4464,7 +4517,19 @@ bool RelionJob::getCommandsAutorefineJob(std::string &outputname, std::vector<st
 	}
 	if (joboptions["fn_mask"].getString().length() > 0)
 	{
-		command += " --solvent_mask " + joboptions["fn_mask"].getString();
+		if (joboptions["fn_protein_mask"].getString().length() > 0 && joboptions["low_pass_composite"].getNumber(error_message) > 0)
+		{
+			// use the protein mask as the solvent mask.
+			command += " --solvent_mask " + joboptions["fn_protein_mask"].getString();
+			command += " --lowpass_mask_composite " + joboptions["fn_mask"].getString();
+			command += " --lowpass " + joboptions["low_pass_composite"].getString();
+			Node node(joboptions["fn_protein_mask"].getString(), joboptions["fn_protein_mask"].node_type);
+			inputNodes.push_back(node);
+		}
+		else
+		{
+			command += " --solvent_mask " + joboptions["fn_mask"].getString();
+		}
 
 		if (joboptions["do_solvent_fsc"].getBoolean())
 			command += " --solvent_correct_fsc ";

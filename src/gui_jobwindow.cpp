@@ -1487,6 +1487,8 @@ void JobWindow::initialiseClass3DWindow()
 
     place("fn_ref", TOGGLE_DEACTIVATE);
     place("fn_mask");
+    place("fn_protein_mask");
+    place("low_pass_composite");
 
 	current_y += STEPY/2;
 
@@ -1690,6 +1692,8 @@ void JobWindow::initialiseAutorefineWindow()
 
     place("fn_ref", TOGGLE_DEACTIVATE);
     place("fn_mask");
+    place("fn_protein_mask");
+    place("low_pass_composite");
 
     current_y += STEPY/2;
 

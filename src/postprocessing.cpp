@@ -29,6 +29,7 @@ void Postprocessing::read(int argc, char **argv)
 	fn_OS = parser.getOption("--ios", "Input tomo optimiser set file. It is used to set --i if not provided. Updated output optimiser set is created.", "");
 	fn_out = parser.getOption("--o", "Output rootname", "postprocess");
 	angpix = textToFloat(parser.getOption("--angpix", "Pixel size in Angstroms", "-1"));
+	requested_angpix = textToFloat(parser.getOption("--rescale_angpix", "Scale output image(s) to this new pixel size (in A)", "-1."));
 	write_halfmaps = parser.checkOption("--half_maps", "Write post-processed half maps for validation");
 	mtf_angpix  = textToFloat(parser.getOption("--mtf_angpix", "Pixel size in the original micrographs/movies (in Angstroms)", "-1."));
 	molweight = textToFloat(parser.getOption("--molweight", "Molecular weight (in kDa) of ordered protein mass", "-1"));
@@ -556,6 +557,20 @@ RFLOAT Postprocessing::sharpenMap()
 		lowPassFilterMap(FT, XSIZE(I1()), applied_filter, angpix, filter_edge_width);
 	}
 
+        if (requested_angpix > 0.)
+        {
+                int oldsize = XSIZE(I1());
+                int newsize = ROUND(oldsize * (angpix / requested_angpix));
+                newsize -= newsize % 2; //make even in case it is not already
+                RFLOAT real_angpix = oldsize * angpix / newsize;
+                if (fabs(real_angpix - requested_angpix) / requested_angpix > 0.001)
+                        std::cerr << "WARNING: Although the requested pixel size (--rescale_angpix) is " << requested_angpix << " A/px, the actual pixel size will be " << real_angpix << " A/px due to rounding of the box size to an even number. The latter value is set to the image header. You can overwrite the header pixel size by --force_header_angpix." << std::endl;
+                MultidimArray<Complex > FT2;
+                windowFourierTransform(FT, FT2, newsize);
+                I1_rescaled().resize(newsize, newsize, newsize);
+                transformer.inverseFourierTransform(FT2, I1_rescaled());
+        }
+
 	transformer.inverseFourierTransform(FT, I1());
 
 	return applied_filter;
@@ -938,6 +953,17 @@ void Postprocessing::writeMaps(FileName fn_root) {
 			std::cout.width(35); std::cout << std::left   <<"  + Processed masked map: "; std::cout << fn_tmp<< std::endl;
 		}
 	}
+
+        // write rescaled map
+        if (requested_angpix > 0.)
+        {
+                I1_rescaled.setStatisticsInHeader();
+                I1_rescaled.setSamplingRateInHeader(requested_angpix);
+                fn_tmp = fn_root + "_rescaled.mrc";
+                I1_rescaled.write(fn_tmp);
+                std::cout.width(35); std::cout << std::left   <<"  + Rescaled processed map: "; std::cout << fn_tmp<< std::endl;
+        }
+
 }
 
 void Postprocessing::writeFscXml(MetaDataTable &MDfsc)
