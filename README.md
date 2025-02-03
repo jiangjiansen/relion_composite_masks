@@ -8,7 +8,7 @@ For membrane proteins, use a soft mask encompassing the whole particle, includin
 
 If the mask of protein of interest is omitted or the composite low-pass filter is set to a negative number, the composte mask function is disabled.
 
-
+If you would like to cite this composite mask method, please cite: Dou, T., Lian, T., Shu, S. et al. The substrate and inhibitor binding mechanism of polyspecific transporter OAT1 revealed by high-resolution cryo-EM. Nat Struct Mol Biol 30, 1794–1805 (2023). https://doi.org/10.1038/s41594-023-01123-3
 
 
 
